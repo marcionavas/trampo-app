@@ -1,0 +1,82 @@
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    ports:
+      - '3000:3000'
+    depends_on:
+      - auth
+      - users
+      - tasks
+      - rabbitmq
+      - postgres
+    environment:
+      - NODE_ENV=development
+
+  auth:
+    build:
+      context: .
+      dockerfile: apps/auth/Dockerfile
+    ports:
+      - '3001:3001'
+    depends_on:
+      - rabbitmq
+      - postgres
+    environment:
+      - NODE_ENV=development
+
+  users:
+    build:
+      context: .
+      dockerfile: apps/users/Dockerfile
+      target: development # Para DEV/hot reload para PROD mudar para 'production' e remover volumes.
+    container_name: trampo-app-backend-users
+    volumes:
+      - ./apps/users:/app/apps/users # hot reload: sincroniza código do microserviço
+      - ./libs:/app/libs # hot reload: sincroniza código da libs
+    ports:
+      - '3002:3002'
+    depends_on:
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/users/.env.development
+    environment:
+      - NODE_ENV=development
+
+  tasks:
+    build:
+      context: .
+      dockerfile: apps/tasks/Dockerfile
+    ports:
+      - '3003:3003'
+    depends_on:
+      - rabbitmq
+      - postgres
+    environment:
+      - NODE_ENV=development
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: trampo
+      POSTGRES_PASSWORD: trampo123
+      POSTGRES_DB: trampodb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

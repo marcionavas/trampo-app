@@ -1,0 +1,7 @@
+{
+  "watch": ["src", "../../libs/common/src", "../../libs/types/src"],
+  "ignore": ["node_modules", "dist", "test"],
+  "ext": "ts,js,json",
+  "exec": "ts-node src/main.ts",
+  "legacyWatch": true
+}

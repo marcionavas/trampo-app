@@ -1,0 +1,107 @@
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+      target: development
+    container_name: trampo-app-backend-api-gateway-test
+    volumes:
+      - ./apps/api-gateway:/app/apps/api-gateway
+      - ./libs:/app/libs
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth
+      - users
+      - tasks
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/api-gateway/.env.test
+    environment:
+      - NODE_ENV=test
+    command: ["npm", "run", "test:e2e"]
+
+  auth:
+    build:
+      context: .
+      dockerfile: apps/auth/Dockerfile
+      target: development
+    container_name: trampo-app-backend-auth-test
+    volumes:
+      - ./apps/auth:/app/apps/auth
+      - ./libs:/app/libs
+    ports:
+      - "3001:3001"
+    depends_on:
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/auth/.env.test
+    environment:
+      - NODE_ENV=test
+    command: ["npm", "run", "test:e2e"]
+
+  users:
+    build:
+      context: .
+      dockerfile: apps/users/Dockerfile
+      target: development
+    container_name: trampo-app-backend-users-test
+    volumes:
+      - ./apps/users:/app/apps/users
+      - ./libs:/app/libs
+    ports:
+      - "3002:3002"
+    depends_on:
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/users/.env.test
+    environment:
+      - NODE_ENV=test
+    command: ["npm", "run", "test:e2e"]
+
+  tasks:
+    build:
+      context: .
+      dockerfile: apps/tasks/Dockerfile
+      target: development
+    container_name: trampo-app-backend-tasks-test
+    volumes:
+      - ./apps/tasks:/app/apps/tasks
+      - ./libs:/app/libs
+    ports:
+      - "3003:3003"
+    depends_on:
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/tasks/.env.test
+    environment:
+      - NODE_ENV=test
+    command: ["npm", "run", "test:e2e"]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: trampo
+      POSTGRES_PASSWORD: trampo123
+      POSTGRES_DB: trampodb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
