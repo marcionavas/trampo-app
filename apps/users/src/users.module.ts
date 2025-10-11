@@ -7,7 +7,7 @@ import { UsersService } from './users.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: (() => {
+      envFilePath: ((): string => {
         switch (process.env.NODE_ENV) {
           case 'local':
             return 'apps/users/.env.local';

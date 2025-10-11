@@ -2,7 +2,15 @@
   "extends": "./tsconfig.base.json",
   "files": [],
   "include": [
-    "apps/users/test/**/*.ts"
+    "apps/api-gateway/src/**/*.ts",
+    "apps/api-gateway/test/**/*.ts",
+    "apps/auth/src/**/*.ts",
+    "apps/auth/test/**/*.ts",
+    "apps/tasks/src/**/*.ts",
+    "apps/tasks/test/**/*.ts",
+    "apps/users/src/**/*.ts",
+    "apps/users/test/**/*.ts",
+    "libs/**/*.ts"
   ],
   "references": [
     {
