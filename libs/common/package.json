@@ -1,10 +1,7 @@
 {
-  "name": "common",
+  "name": "@trampo/common",
   "exports": {
+    ".": "./src/index.ts",
     "./utils": "./src/utils.ts"
-  },
-  "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "private": true
+  }
 }

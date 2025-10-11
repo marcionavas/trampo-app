@@ -18,5 +18,11 @@
     "nx:build": "npx nx build users",
     "nx:serve": "npx nx serve users",
     "test:e2e": "jest --config ./test/jest-e2e.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/testing": "^11.1.6"
   }
 }
