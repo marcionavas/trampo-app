@@ -6,4 +6,8 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest'
   },
+  moduleNameMapper: {
+    '^@common$': '<rootDir>/../../libs/common/src/index.ts',
+    '^@common/(.*)$': '<rootDir>/../../libs/common/src/$1'
+  }
 };

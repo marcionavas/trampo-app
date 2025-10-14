@@ -7,13 +7,29 @@
         "outputPath": "dist/apps/users",
         "main": "src/main.ts",
         "tsConfig": "tsconfig.app.json",
-        "assets": ["src/assets"]
+        "assets": [
+          "src/assets"
+        ]
       }
     },
     "serve": {
       "executor": "@nx/js:node",
       "options": {
         "buildTarget": "users:build"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/users/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "test:e2e": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/users/test/jest-e2e.json",
+        "passWithNoTests": true
       }
     }
   }

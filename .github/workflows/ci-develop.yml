@@ -1,0 +1,32 @@
+name: CI Develop
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint all projects
+        run: npx nx lint
+      - name: Test all projects
+        run: npx nx test
+      - name: Build api-gateway
+        run: npx nx build api-gateway
+      - name: Build auth
+        run: npx nx build auth
+      - name: Build tasks
+        run: npx nx build tasks
+      - name: Build users
+        run: npx nx build users
