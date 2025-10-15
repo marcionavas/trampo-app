@@ -1,11 +1,11 @@
-name: CI Develop
+name: CI/CD Development
 
 on:
   push:
     branches: [develop]
 
 jobs:
-  build-and-test:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,17 +19,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Copy .env.example
-        run: cp .env.example .env
-
-      - name: Lint
+      - name: Run lint
         run: npx nx lint
-
-      - name: Build all apps
-        run: npx nx build
 
       - name: Run unit tests
         run: npx nx test
 
-      - name: Run e2e tests
-        run: npx nx run users:test:e2e
+      - name: Build all apps
+        run: npx nx build
+
+      - name: Run integration tests (docker-compose)
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          sleep 10
+          npx nx run users:test:e2e
+          docker-compose -f docker-compose.test.yml down
