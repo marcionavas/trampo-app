@@ -1,0 +1,28 @@
+{
+  "name": "auth",
+  "version": "1.0.0",
+  "description": "Microserviço auth do Trampo APP",
+  "main": "dist/main.js",
+  "type": "commonjs",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:dev:nodemon": "nodemon --config nodemon.json",
+    "build": "nest build",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "nx:build": "npx nx build auth",
+    "nx:serve": "npx nx serve auth",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/testing": "^11.1.6"
+  }
+}

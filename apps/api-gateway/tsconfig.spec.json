@@ -1,12 +1,13 @@
 {
   "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "types": [
+      "jest",
+      "node"
+    ]
+  },
   "include": [
     "src/**/*.ts",
     "test/**/*.ts"
-  ],
-  "references": [
-    {
-      "path": "../../libs/common/tsconfig.lib.json"
-    }
   ]
 }

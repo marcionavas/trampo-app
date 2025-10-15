@@ -1,0 +1,36 @@
+{
+  "name": "auth",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/auth",
+        "main": "src/main.ts",
+        "tsConfig": "tsconfig.app.json",
+        "assets": [
+          "src/assets"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "auth:build"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/auth/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "test:e2e": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/auth/test/jest-e2e.json",
+        "passWithNoTests": true
+      }
+    }
+  }
+}
