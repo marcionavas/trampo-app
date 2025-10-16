@@ -5,7 +5,7 @@ coverage/
 .env.*
 !.env.example
 *.log
-test/
+# test/ removido para versionar pasta de testes
 generated/
 prisma/.env
 prisma/migrations/
