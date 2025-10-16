@@ -7,6 +7,7 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,6 +28,35 @@ jobs:
 
       - name: Build all apps
         run: npx nx build
+
+      # Cria .env.test para cada microserviço usando secrets
+      - name: Create .env.test for api-gateway
+        run: |
+          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.test
+          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_TEST }}" >> apps/api-gateway/.env.test
+          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_TEST }}" >> apps/api-gateway/.env.test
+
+      - name: Create .env.test for auth
+        run: |
+          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.test
+          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_TEST }}" >> apps/auth/.env.test
+          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_TEST }}" >> apps/auth/.env.test
+
+      - name: Create .env.test for users
+        run: |
+          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.test
+          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_TEST }}" >> apps/users/.env.test
+          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_TEST }}" >> apps/users/.env.test
+
+      - name: Create .env.test for tasks
+        run: |
+          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.test
+          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_TEST }}" >> apps/tasks/.env.test
+          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_TEST }}" >> apps/tasks/.env.test
 
       - name: Run integration tests (docker-compose)
         run: |
