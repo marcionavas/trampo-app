@@ -15,6 +15,7 @@ RUN npm ci
 # Copia código do microserviço e libs compartilhadas
 COPY apps /app/apps
 COPY libs /app/libs
+RUN ls -l /app/apps/users/test || echo "test folder not found"
 
 # Build do microserviço e suas dependências (libs)
 WORKDIR /app
