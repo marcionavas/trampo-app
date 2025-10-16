@@ -26,6 +26,10 @@ jobs:
       - name: Run unit tests
         run: npx nx test
 
+      # Permite pasta de testes no build de integração removendo linhas do .dockerignore
+      - name: Permitir pasta test no build de integração
+        run: sed -i '/^test$/d;/apps\/*\/test/d' .dockerignore
+
       - name: Build all apps
         run: npx nx build
 
