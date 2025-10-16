@@ -10,7 +10,7 @@ generated/
 prisma/.env
 prisma/migrations/
 prisma/migration_lock.toml
-jest-*.json
+# jest-*.json removido para versionar configs de teste
 *.lcov
 *.lcov.info
 *.out
