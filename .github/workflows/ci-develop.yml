@@ -28,12 +28,9 @@ jobs:
       - name: Build all apps
         run: npx nx build
 
-      - name: Install Docker Compose
-        run: sudo apt-get update && sudo apt-get install -y docker-compose
-
       - name: Run integration tests (docker-compose)
         run: |
-          docker-compose -f docker-compose.test.yml up -d
+          docker compose -f docker-compose.test.yml up -d
           sleep 10
           npx nx run users:test:e2e
-          docker-compose -f docker-compose.test.yml down
+          docker compose -f docker-compose.test.yml down
