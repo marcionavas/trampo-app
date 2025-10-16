@@ -5,6 +5,7 @@ services:
       dockerfile: apps/api-gateway/Dockerfile
       target: development
     container_name: trampo-app-backend-api-gateway-test
+    working_dir: /app
     # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3000:3000"
@@ -26,6 +27,7 @@ services:
       dockerfile: apps/auth/Dockerfile
       target: development
     container_name: trampo-app-backend-auth-test
+    working_dir: /app
     # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3001:3001"
@@ -44,6 +46,7 @@ services:
       dockerfile: apps/users/Dockerfile
       target: development
     container_name: trampo-app-backend-users-test
+    working_dir: /app
     # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3002:3002"
@@ -62,6 +65,7 @@ services:
       dockerfile: apps/tasks/Dockerfile
       target: development
     container_name: trampo-app-backend-tasks-test
+    working_dir: /app
     # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3003:3003"
