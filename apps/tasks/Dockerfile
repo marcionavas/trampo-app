@@ -15,7 +15,6 @@ RUN npm ci
 # Copia código do microserviço e libs compartilhadas
 COPY apps /app/apps
 COPY libs /app/libs
-RUN ls -l /app/apps/tasks && ls -l /app/apps/tasks/test
 
 # Build do microserviço e suas dependências (libs)
 WORKDIR /app
