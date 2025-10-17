@@ -24,5 +24,8 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.6",
     "@nestjs/testing": "^11.1.6"
+  },
+  "devDependencies": {
+    "wait-on": "^9.0.1"
   }
 }

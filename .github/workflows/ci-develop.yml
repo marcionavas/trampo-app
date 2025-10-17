@@ -73,5 +73,14 @@ jobs:
               EXIT_CODE=1
             fi
           done
-          docker compose -f docker-compose.test.yml down
+          # Exibe logs dos containers que falharam
+          for SERVICE in api-gateway auth users tasks; do
+            CODE=$(docker inspect trampo-app-backend-${SERVICE}-test --format='{{.State.ExitCode}}')
+            if [ "$CODE" -ne 0 ]; then
+              echo "==== LOGS $SERVICE ===="
+              docker logs trampo-app-backend-${SERVICE}-test || true
+            fi
+          done
+          # Limpa volumes para garantir ambiente limpo
+          docker compose -f docker-compose.test.yml down -v
           exit $EXIT_CODE
