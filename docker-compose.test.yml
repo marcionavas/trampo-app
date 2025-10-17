@@ -123,7 +123,7 @@ services:
     environment:
       POSTGRES_USER: trampo
       POSTGRES_PASSWORD: trampo123
-      POSTGRES_DB: trampodb
+      POSTGRES_DB: trampodb_test
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
