@@ -116,7 +116,7 @@ services:
       retries: 10
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     restart: always
     ports:
       - "5432:5432"
