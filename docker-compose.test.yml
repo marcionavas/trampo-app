@@ -127,7 +127,11 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: "pg_isready -U trampo"
+      test:
+        [
+          "CMD-SHELL",
+          'psql -U trampo -d trampodb_test -c "SELECT 1" >/dev/null 2>&1',
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
