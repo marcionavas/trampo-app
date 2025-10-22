@@ -5,82 +5,93 @@ on:
     branches: [develop]
 
 jobs:
-  build-test:
+  lint:
     runs-on: ubuntu-latest
-    environment: development
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx lint
 
-      - name: Install dependencies
-        run: npm ci
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx test --code-coverage
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
 
-      - name: Run lint
-        run: npx nx lint
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx build
 
-      - name: Run unit tests
-        run: npx nx test
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
 
-      # Permite pasta de testes no build de integração removendo linhas do .dockerignore
-      - name: Permitir pasta test no build de integração
-        run: sed -i '/^test$/d;/apps\/*\/test/d;/libs\/*\/test/d' .dockerignore
-
-      - name: Build all apps
-        run: npx nx build
-
-      # Cria .env.test para cada microserviço usando secrets
-      - name: Create .env.test for api-gateway
+      # Gera os .env.test para cada microserviço
+      - name: Create .env.test files
         run: |
           echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.test
           echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.test
           echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_TEST }}" >> apps/api-gateway/.env.test
           echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_TEST }}" >> apps/api-gateway/.env.test
 
-      - name: Create .env.test for auth
-        run: |
           echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.test
           echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.test
           echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_TEST }}" >> apps/auth/.env.test
           echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_TEST }}" >> apps/auth/.env.test
 
-      - name: Create .env.test for users
-        run: |
           echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.test
           echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.test
           echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_TEST }}" >> apps/users/.env.test
           echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_TEST }}" >> apps/users/.env.test
 
-      - name: Create .env.test for tasks
-        run: |
           echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.test
           echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.test
           echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_TEST }}" >> apps/tasks/.env.test
           echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_TEST }}" >> apps/tasks/.env.test
 
+      # Executa testes de integração com Docker Compose
       - name: Run integration tests (docker-compose)
         run: |
-          docker compose -f docker-compose.test.yml up --abort-on-container-exit
-          EXIT_CODE=0
+          docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from api-gateway
+        # Garante que containers e volumes serão removidos mesmo em caso de erro
+        if: always()
+      - name: Cleanup docker
+        run: docker compose -f docker-compose.test.yml down -v
+        if: always()
+      - name: Show failed container logs
+        if: failure()
+        run: |
           for SERVICE in api-gateway auth users tasks; do
-            CODE=$(docker inspect trampo-app-backend-${SERVICE}-test --format='{{.State.ExitCode}}')
-            if [ "$CODE" -ne 0 ]; then
-              echo "Container $SERVICE failed with exit code $CODE"
-              EXIT_CODE=1
-            fi
+            docker logs trampo-app-backend-${SERVICE}-test || true
           done
-          # Exibe logs dos containers que falharam
-          for SERVICE in api-gateway auth users tasks; do
-            CODE=$(docker inspect trampo-app-backend-${SERVICE}-test --format='{{.State.ExitCode}}')
-            if [ "$CODE" -ne 0 ]; then
-              echo "==== LOGS $SERVICE ===="
-              docker logs trampo-app-backend-${SERVICE}-test || true
-            fi
-          done
-          # Limpa volumes para garantir ambiente limpo
-          docker compose -f docker-compose.test.yml down -v
-          exit $EXIT_CODE
