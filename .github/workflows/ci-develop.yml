@@ -95,3 +95,11 @@ jobs:
           for SERVICE in api-gateway auth users tasks; do
             docker logs trampo-app-backend-${SERVICE}-test || true
           done
+      - name: Show all container logs
+        if: always()
+        run: |
+          docker ps -a
+          for SERVICE in api-gateway auth users tasks; do
+            echo "==== LOGS $SERVICE ===="
+            docker logs trampo-app-backend-${SERVICE}-test || true
+          done
