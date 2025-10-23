@@ -1,3 +1,17 @@
+#
+# Para builds de PRODUÇÃO: se quiser ignorar arquivos de teste, descomente as linhas abaixo.
+#   test
+#   apps/*/test
+#   libs/*/test
+# Isso evita que testes sejam enviados para produção, mas lembre-se de manter essas linhas comentadas para CI/CD.
+# ===============================
+# .gitignore - Padrão profissional
+#
+# Para builds de PRODUÇÃO e CI:
+#   - Este arquivo já está adequado para pipelines, ignorando node_modules, dist, coverage, envs, logs, arquivos temporários e de backup.
+#   - Pastas de teste NÃO são ignoradas, permitindo versionamento e execução de testes em CI.
+#   - Se quiser ignorar arquivos de teste em produção, ajuste conforme a política do time.
+# ===============================
 node_modules/
 npm-debug.log*
 yarn-error.log*

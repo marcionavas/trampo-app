@@ -1,3 +1,13 @@
+#
+# Para builds de PRODUÇÃO: se quiser ignorar arquivos de teste, adicione:
+#   test/
+# Isso evita que testes sejam enviados para produção, mas mantenha a linha comentada para CI/CD.
+# ===============================
+# .gitignore (tasks) - Padrão profissional
+#
+# Adequado para CI: pastas de teste NÃO são ignoradas, permitindo execução de testes.
+# Ajuste apenas se quiser ignorar testes em produção.
+# ===============================
 node_modules/
 dist/
 coverage/
