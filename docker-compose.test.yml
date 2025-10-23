@@ -27,7 +27,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npx nx run api-gateway:test:e2e
+      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
 
   auth:
     build:
@@ -51,7 +51,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npx nx run auth:test:e2e
+      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
 
   users:
     build:
@@ -75,7 +75,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npx nx run users:test:e2e
+      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
 
   tasks:
     build:
@@ -99,7 +99,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npx nx run tasks:test:e2e
+      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
 
   rabbitmq:
     image: rabbitmq:3-management
