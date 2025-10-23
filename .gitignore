@@ -1,14 +1,11 @@
-# Node
 node_modules/
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Build
 dist/
 coverage/
 
-# Env
 .env
 .env.local
 .env.*.local
@@ -16,27 +13,23 @@ coverage/
 apps/*/.env.*
 libs/*/.env.*
 
-# IDE/OS
 .vscode/
 .idea/
 *.swp
 .DS_Store
 Thumbs.db
 
-# Docker
 docker-compose.override.yml
 docker-compose.*.override.yml
 .docker/
 **/.docker/
 
-# Monorepo - ignorar artefatos dos apps/libs
 apps/*/node_modules/
 apps/*/dist/
 apps/*/coverage/
 libs/*/node_modules/
 libs/*/dist/
 libs/*/coverage/
-
 
 # Testes não ignorados para versionamento e CI/CD
 # apps/*/jest-*.json
@@ -45,20 +38,17 @@ libs/*/coverage/
 # *.lcov
 # *.lcov.info
 
-# Prisma
 prisma/.env
 prisma/migrations/
 apps/*/prisma/.env
 apps/*/prisma/migrations/
 apps/*/prisma/migration_lock.toml
 
-# Logs
 logs/
 *.log
 *.out
 *.err
 
-# Cache
 .nx/cache
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
@@ -69,18 +59,15 @@ temp/
 *.tmp
 *.bak
 
-# Backup files
 *.bak
 *.old
 *.orig
 *.save
 
-# OS generated files
 ehthumbs.db
 Icon?
 Desktop.ini
 
-# Others
 *.pid
 *.seed
 *.sqlite
