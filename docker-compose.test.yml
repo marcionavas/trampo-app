@@ -27,7 +27,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:5432 tcp:5672 && npm run test:e2e'
 
   auth:
     build:
@@ -51,7 +51,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:5432 tcp:5672 && npm run test:e2e'
 
   users:
     build:
@@ -75,7 +75,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:5432 tcp:5672 && npm run test:e2e'
 
   tasks:
     build:
@@ -99,7 +99,7 @@ services:
     command:
       - sh
       - -c
-      - npx wait-on tcp:5432 tcp:5672 && npm run test:e2e
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:5432 tcp:5672 && npm run test:e2e'
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -110,10 +110,10 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     healthcheck:
-      test: "rabbitmq-diagnostics ping"
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 5s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 20
 
   postgres:
     image: postgres:15
@@ -127,14 +127,10 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'psql -U trampo -d trampodb_test -c "SELECT 1" >/dev/null 2>&1',
-        ]
+      test: ["CMD-SHELL", "pg_isready -U trampo -d trampodb_test"]
       interval: 5s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 20
 
 volumes:
   pgdata:
