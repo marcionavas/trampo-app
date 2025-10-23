@@ -81,15 +81,8 @@ jobs:
           echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_TEST }}" >> apps/tasks/.env.test
 
       # Executa testes de integração com Docker Compose
-      - name: Run integration tests (docker-compose)
-        run: |
-          docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from api-gateway
+      - name: Run integration tests
+        run: docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+      - name: Cleanup
         if: always()
-      - name: Show all container logs
-        if: always()
-        run: |
-          docker ps -a
-          for SERVICE in api-gateway auth users tasks; do
-            echo "==== LOGS $SERVICE ===="
-            docker logs trampo-app-backend-${SERVICE}-test || true
-          done
+        run: docker-compose -f docker-compose.test.yml down -v
