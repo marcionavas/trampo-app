@@ -12,8 +12,12 @@ on:
     branches: [staging]
 
 jobs:
-  build-and-test:
+  build-test-push:
     runs-on: ubuntu-latest
+    env:
+      REGISTRY: ghcr.io/${{ github.repository_owner }}
+      IMAGE_TAG: ${{ github.sha }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,7 +31,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          context: ./apps/users
+          file: ./apps/users/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/users:${{ env.IMAGE_TAG }}
 
       - name: Install dependencies
         run: npm ci
@@ -37,8 +44,11 @@ jobs:
           echo "DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}" >> $GITHUB_ENV
           echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL_STAGING }}" >> $GITHUB_ENV
 
-      - name: Lint
+      - name: Run lint
         run: npx nx lint
+
+      - name: Run unit tests
+        run: npx nx test
 
       - name: Build all apps
         run: npx nx build

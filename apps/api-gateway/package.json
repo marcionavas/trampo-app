@@ -1,7 +1,7 @@
 {
-  "name": "users",
+  "name": "api-gateway",
   "version": "1.0.0",
-  "description": "Microserviço de usuários do Trampo APP",
+  "description": "Microserviço api-gateway do Trampo APP",
   "main": "dist/main.js",
   "type": "commonjs",
   "private": true,
@@ -15,8 +15,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "nx:build": "npx nx build users",
-    "nx:serve": "npx nx serve users",
+    "nx:build": "npx nx build api-gateway",
+    "nx:serve": "npx nx serve api-gateway",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {

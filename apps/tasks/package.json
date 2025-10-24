@@ -1,7 +1,7 @@
 {
-  "name": "users",
+  "name": "tasks",
   "version": "1.0.0",
-  "description": "Microserviço de usuários do Trampo APP",
+  "description": "Microserviço tasks do Trampo APP",
   "main": "dist/main.js",
   "type": "commonjs",
   "private": true,
@@ -15,8 +15,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "nx:build": "npx nx build users",
-    "nx:serve": "npx nx serve users",
+    "nx:build": "npx nx build tasks",
+    "nx:serve": "npx nx serve tasks",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {

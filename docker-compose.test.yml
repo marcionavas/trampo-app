@@ -5,22 +5,29 @@ services:
       dockerfile: apps/api-gateway/Dockerfile
       target: development
     container_name: trampo-app-backend-api-gateway-test
-    volumes:
-      - ./apps/api-gateway:/app/apps/api-gateway
-      - ./libs:/app/libs
+    working_dir: /app/apps/api-gateway
+    # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3000:3000"
     depends_on:
-      - auth
-      - users
-      - tasks
-      - rabbitmq
-      - postgres
+      auth:
+        condition: service_started
+      users:
+        condition: service_started
+      tasks:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     env_file:
       - apps/api-gateway/.env.test
     environment:
       - NODE_ENV=test
-    command: ["npm", "run", "test:e2e"]
+    command:
+      - sh
+      - -c
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:postgres:5432 tcp:rabbitmq:5672 && npm run test:e2e'
 
   auth:
     build:
@@ -28,19 +35,23 @@ services:
       dockerfile: apps/auth/Dockerfile
       target: development
     container_name: trampo-app-backend-auth-test
-    volumes:
-      - ./apps/auth:/app/apps/auth
-      - ./libs:/app/libs
+    working_dir: /app/apps/auth
+    # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3001:3001"
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     env_file:
       - apps/auth/.env.test
     environment:
       - NODE_ENV=test
-    command: ["npm", "run", "test:e2e"]
+    command:
+      - sh
+      - -c
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:postgres:5432 tcp:rabbitmq:5672 && npm run test:e2e'
 
   users:
     build:
@@ -48,19 +59,23 @@ services:
       dockerfile: apps/users/Dockerfile
       target: development
     container_name: trampo-app-backend-users-test
-    volumes:
-      - ./apps/users:/app/apps/users
-      - ./libs:/app/libs
+    working_dir: /app/apps/users
+    # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3002:3002"
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     env_file:
       - apps/users/.env.test
     environment:
       - NODE_ENV=test
-    command: ["npm", "run", "test:e2e"]
+    command:
+      - sh
+      - -c
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:postgres:5432 tcp:rabbitmq:5672 && npm run test:e2e'
 
   tasks:
     build:
@@ -68,19 +83,23 @@ services:
       dockerfile: apps/tasks/Dockerfile
       target: development
     container_name: trampo-app-backend-tasks-test
-    volumes:
-      - ./apps/tasks:/app/apps/tasks
-      - ./libs:/app/libs
+    working_dir: /app/apps/tasks
+    # volumes removidos para evitar conflitos em CI/CD
     ports:
       - "3003:3003"
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     env_file:
       - apps/tasks/.env.test
     environment:
       - NODE_ENV=test
-    command: ["npm", "run", "test:e2e"]
+    command:
+      - sh
+      - -c
+      - 'echo "Iniciando testes $(date)"; npx wait-on tcp:postgres:5432 tcp:rabbitmq:5672 && npm run test:e2e'
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -90,18 +109,28 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     restart: always
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: trampo
       POSTGRES_PASSWORD: trampo123
-      POSTGRES_DB: trampodb
+      POSTGRES_DB: trampodb_test
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trampo -d trampodb_test"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
 
 volumes:
   pgdata:

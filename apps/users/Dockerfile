@@ -6,6 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY nx.json ./
 COPY tsconfig*.json ./
+COPY jest.config.js ./
 
 # Instala dependências
 RUN npm ci

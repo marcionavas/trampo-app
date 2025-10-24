@@ -1,0 +1,36 @@
+{
+  "name": "tasks",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/tasks",
+        "main": "src/main.ts",
+        "tsConfig": "tsconfig.app.json",
+        "assets": [
+          "src/assets"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "tasks:build"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/tasks/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "test:e2e": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/tasks/test/jest-e2e.json",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "api-gateway",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/api-gateway",
+        "main": "src/main.ts",
+        "tsConfig": "tsconfig.app.json",
+        "assets": [
+          "src/assets"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "api-gateway:build"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/api-gateway/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "test:e2e": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/api-gateway/test/jest-e2e.json",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

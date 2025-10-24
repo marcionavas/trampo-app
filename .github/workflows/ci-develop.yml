@@ -1,35 +1,88 @@
-name: CI Develop
+name: CI/CD Development
 
 on:
   push:
     branches: [develop]
 
 jobs:
-  build-and-test:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx lint
 
-      - name: Install dependencies
-        run: npm ci
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx test --coverage
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
 
-      - name: Copy .env.example
-        run: cp .env.example .env
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx build
 
-      - name: Lint
-        run: npx nx lint
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
 
-      - name: Build all apps
-        run: npx nx build
+      # Gera os .env.test para cada microserviço
+      - name: Create .env.test files
+        run: |
+          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.test
+          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_TEST }}" >> apps/api-gateway/.env.test
+          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_TEST }}" >> apps/api-gateway/.env.test
 
-      - name: Run unit tests
-        run: npx nx test
+          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.test
+          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_TEST }}" >> apps/auth/.env.test
+          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_TEST }}" >> apps/auth/.env.test
 
-      - name: Run e2e tests
-        run: npx nx run users:test:e2e
+          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.test
+          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_TEST }}" >> apps/users/.env.test
+          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_TEST }}" >> apps/users/.env.test
+
+          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.test
+          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_TEST }}" >> apps/tasks/.env.test
+          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_TEST }}" >> apps/tasks/.env.test
+
+      # Executa testes de integração com Docker Compose
+      - name: Run integration tests
+        run: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v

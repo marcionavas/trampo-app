@@ -1,23 +1,22 @@
 {
   "extends": "./tsconfig.base.json",
   "files": [],
-  "include": [
-    "apps/api-gateway/src/**/*.ts",
-    "apps/api-gateway/test/**/*.ts",
-    "apps/auth/src/**/*.ts",
-    "apps/auth/test/**/*.ts",
-    "apps/tasks/src/**/*.ts",
-    "apps/tasks/test/**/*.ts",
-    "apps/users/src/**/*.ts",
-    "apps/users/test/**/*.ts",
-    "libs/**/*.ts"
-  ],
+  "include": [],
   "references": [
     {
       "path": "./apps/users"
     },
     {
-      "path": "./libs/common"
+      "path": "./apps/auth"
+    },
+    {
+      "path": "./apps/tasks"
+    },
+    {
+      "path": "./apps/api-gateway"
+    },
+    {
+      "path": "./libs/common/tsconfig.lib.json"
     }
   ]
 }
