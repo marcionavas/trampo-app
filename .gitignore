@@ -1,3 +1,10 @@
+###########################################
+# .gitignore - staging/produção
+# Para builds de STAGING/PRODUÇÃO:
+#   - Mantenha as linhas abaixo descomentadas para ignorar pastas de teste/configs de teste.
+# Para builds de CI/teste:
+#   - Comente as linhas abaixo para permitir versionamento e execução de testes.
+###########################################
 # Node
 node_modules/
 npm-debug.log*

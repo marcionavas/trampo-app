@@ -1,5 +1,5 @@
 ###########################################
-# .gitignore (users) - staging/produção
+# .gitignore (tasks) - staging/produção
 # Para builds de STAGING/PRODUÇÃO:
 #   - Mantenha a linha abaixo descomentada para ignorar testes.
 # Para CI/teste:
@@ -12,12 +12,10 @@ coverage/
 .env.*
 !.env.example
 *.log
-test/
 generated/
 prisma/.env
 prisma/migrations/
 prisma/migration_lock.toml
-jest-*.json
 *.lcov
 *.lcov.info
 *.out

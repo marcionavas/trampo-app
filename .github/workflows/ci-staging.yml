@@ -1,3 +1,10 @@
+# ===============================
+# CI Staging - Padrão profissional
+#
+# Pipeline para validação completa do código na branch staging.
+# Executa lint, build, testes unitários, e2e e upload de cobertura.
+# ===============================
+
 name: CI Staging
 
 on:
@@ -10,6 +17,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Permitir testes no build do Docker (ajuste .dockerignore)
+        run: |
+          sed -i.bak '/^test[[:space:]]*#/d' .dockerignore
+          sed -i.bak '/^apps\/\*\/test[[:space:]]*#/d' .dockerignore
+          sed -i.bak '/^libs\/\*\/test[[:space:]]*#/d' .dockerignore
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,3 +48,9 @@ jobs:
 
       - name: Run e2e tests
         run: npx nx run users:test:e2e
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/

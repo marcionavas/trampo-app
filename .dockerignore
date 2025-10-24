@@ -1,3 +1,10 @@
+###########################################
+# .dockerignore - staging/produção
+# Para builds de STAGING/PRODUÇÃO:
+#   - Mantenha as linhas abaixo descomentadas para ignorar pastas de teste/configs de teste.
+# Para builds de CI/teste:
+#   - Comente as linhas abaixo para permitir testes no container.
+###########################################
 node_modules
 dist
 coverage
@@ -19,12 +26,13 @@ docker-compose.*.yml
 .idea
 .DS_Store
 Thumbs.db
-test
+test              # <--- Comente para builds de CI/teste
+apps/*/test       # <--- Comente para builds de CI/teste
+libs/*/test       # <--- Comente para builds de CI/teste
 apps/*/node_modules
 apps/*/dist
 apps/*/coverage
 apps/*/.env*
-apps/*/test
 apps/*/prisma/.env
 apps/*/prisma/migrations
 apps/*/prisma/migration_lock.toml
@@ -32,7 +40,6 @@ libs/*/node_modules
 libs/*/dist
 libs/*/coverage
 libs/*/.env*
-libs/*/test
 prisma/.env
 prisma/migrations
 prisma/migration_lock.toml
