@@ -38,7 +38,6 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/nx.json ./
 COPY --from=builder /app/tsconfig*.json ./
 COPY --from=builder /app/dist/apps/auth ./dist/apps/auth
-COPY --from=builder /app/dist/libs ./dist/libs
 
 # Instala apenas dependências de produção
 RUN npm ci --omit=dev
