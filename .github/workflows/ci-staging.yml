@@ -29,7 +29,7 @@ jobs:
           sed -i.bak '/^libs\/\*\/test[[:space:]]*#/d' .dockerignore
 
       - name: Subir serviços dependentes (docker-compose)
-        run: docker-compose -f docker-compose.staging.yml up -d
+        run: docker compose -f docker-compose.staging.yml up -d
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -89,4 +89,4 @@ jobs:
 
       - name: Derrubar serviços dependentes (docker-compose)
         if: always()
-        run: docker-compose -f docker-compose.staging.yml down
+        run: docker compose -f docker-compose.staging.yml down
