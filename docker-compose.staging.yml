@@ -27,8 +27,8 @@ services:
 
   api-gateway:
     build:
-      context: ./apps/api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/api-gateway/Dockerfile
     container_name: api-gateway
     env_file:
       - ./apps/api-gateway/.env.staging
@@ -40,8 +40,8 @@ services:
 
   auth:
     build:
-      context: ./apps/auth
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/auth/Dockerfile
     container_name: auth
     env_file:
       - ./apps/auth/.env.staging
@@ -53,8 +53,8 @@ services:
 
   users:
     build:
-      context: ./apps/users
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/users/Dockerfile
     container_name: users
     env_file:
       - ./apps/users/.env.staging
