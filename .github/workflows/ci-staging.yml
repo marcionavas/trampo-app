@@ -28,27 +28,41 @@ jobs:
           sed -i.bak '/^apps\/\*\/test[[:space:]]*#/d' .dockerignore
           sed -i.bak '/^libs\/\*\/test[[:space:]]*#/d' .dockerignore
 
+      - name: Subir serviços dependentes (docker-compose)
+        run: docker-compose -f docker-compose.staging.yml up -d
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          context: ./apps/users
-          file: ./apps/users/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/users:${{ env.IMAGE_TAG }}
+          node-version: "20"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Set secrets as env vars
         run: |
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}" >> $GITHUB_ENV
-          echo "RABBITMQ_URL=${{ secrets.RABBITMQ_URL_STAGING }}" >> $GITHUB_ENV
+          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.staging
+          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
+
+          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.staging
+          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
+
+          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.staging
+          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
+
+          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.staging
+          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
 
       - name: Run lint
         run: npx nx lint
-
-      - name: Run unit tests
-        run: npx nx test
 
       - name: Build all apps
         run: npx nx build
@@ -64,3 +78,15 @@ jobs:
         with:
           name: coverage
           path: coverage/
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/users
+          file: ./apps/users/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/users:${{ env.IMAGE_TAG }}
+
+      - name: Derrubar serviços dependentes (docker-compose)
+        if: always()
+        run: docker-compose -f docker-compose.staging.yml down

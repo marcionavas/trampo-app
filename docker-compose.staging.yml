@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: trampodb_staging
+      POSTGRES_USER: trampo
+      POSTGRES_PASSWORD: trampo123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data_staging:/var/lib/rabbitmq
+
+  api-gateway:
+    build:
+      context: ./apps/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    env_file:
+      - ./apps/api-gateway/.env.staging
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "3000:3000"
+
+  auth:
+    build:
+      context: ./apps/auth
+      dockerfile: Dockerfile
+    container_name: auth
+    env_file:
+      - ./apps/auth/.env.staging
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "3001:3001"
+
+  users:
+    build:
+      context: ./apps/users
+      dockerfile: Dockerfile
+    container_name: users
+    env_file:
+      - ./apps/users/.env.staging
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "3002:3002"
+
+volumes:
+  postgres_data_staging:
+  rabbitmq_data_staging:
