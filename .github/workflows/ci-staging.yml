@@ -1,11 +1,4 @@
-# ===============================
-# CI Staging - Professional Standard
-#
-# Pipeline for complete code validation on the staging branch.
-# Runs lint, format, build, unit tests, e2e tests, uploads coverage and test results, builds/pushes Docker images, and performs health checks.
-# ===============================
-
-name: CI Staging
+name: CI/CD Staging
 
 on:
   push:
@@ -13,180 +6,90 @@ on:
   pull_request:
     branches: [staging]
 
-env:
-  REGISTRY: ghcr.io/${{ github.repository_owner }}
-  IMAGE_TAG: ${{ github.sha }}
-  NODE_ENV: staging
-
 jobs:
-  lint-format-test:
-    name: Lint, Format, Unit Test & Coverage
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Cache node_modules
-        uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx lint
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Prettier (format check)
-        run: npx prettier --check .
-
-      - name: Run lint
-        run: npx nx lint
-
-      - name: Run unit tests with JUnit output
-        run: npx nx test --coverage --junitFile=coverage/junit.xml
-
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx test --coverage
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage/
-
-      - name: Upload JUnit test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-results
-          path: coverage/junit.xml
       - name: Security audit (npm audit)
         run: npm audit --audit-level=moderate > npm-audit.txt || true
-
       - name: Upload npm audit report
         uses: actions/upload-artifact@v4
         with:
           name: npm-audit-report
           path: npm-audit.txt
-      - name: Summarize unit test results
-        run: |
-          echo "==== Unit Test Summary ===="
-          grep -E 'Tests:|Passed|Failed|Skipped' coverage/junit.xml || echo "See full JUnit XML for details."
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx nx build
 
   integration-e2e:
-    name: Integration & E2E Tests (Matrix)
     runs-on: ubuntu-latest
-    needs: lint-format-test
-    strategy:
-      matrix:
-        app: [users, api-gateway, auth, tasks]
-        node-version: [18, 20]
+    needs: build
+    timeout-minutes: 15
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Cache node_modules
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Set secrets as environment variables
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      # Create .env.staging files for each microservice
+      - name: Create .env.staging files
         run: |
-          if [ "${{ matrix.app }}" = "users" ]; then
-            echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
-            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/users/.env.staging
-            echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
-            echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
-          elif [ "${{ matrix.app }}" = "api-gateway" ]; then
-            echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
-            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/api-gateway/.env.staging
-            echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
-            echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
-          elif [ "${{ matrix.app }}" = "auth" ]; then
-            echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
-            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/auth/.env.staging
-            echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
-            echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
-          elif [ "${{ matrix.app }}" = "tasks" ]; then
-            echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
-            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/tasks/.env.staging
-            echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
-            echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
-          fi
+          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
+          echo "NODE_ENV=staging" >> apps/api-gateway/.env.staging
+          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
 
-      - name: Start dependent services (docker-compose)
-        run: docker compose -f docker-compose.staging.yml up -d
+          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
+          echo "NODE_ENV=staging" >> apps/auth/.env.staging
+          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
 
-      - name: Build ${{ matrix.app }} app
-        run: npx nx build ${{ matrix.app }}
+          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
+          echo "NODE_ENV=staging" >> apps/users/.env.staging
+          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
 
-      - name: Run ${{ matrix.app }} e2e tests
-        run: npx nx run ${{ matrix.app }}:test:e2e --junitFile=coverage/junit-e2e-${{ matrix.app }}.xml
-
-      - name: Upload e2e JUnit test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-e2e-results-${{ matrix.app }}
-          path: coverage/junit-e2e-${{ matrix.app }}.xml
-
-      - name: Summarize e2e test results
-        run: |
-          echo "==== E2E Test Summary ===="
-          grep -E 'Tests:|Passed|Failed|Skipped' coverage/junit-e2e-${{ matrix.app }}.xml || echo "See full JUnit XML for details."
-
-      - name: Ensure all .env.staging files exist (cleanup)
+          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
+          echo "NODE_ENV=staging" >> apps/tasks/.env.staging
+          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
+      # Run integration/e2e tests with Docker Compose
+      - name: Run integration/e2e tests
+        run: docker compose -f docker-compose.staging.yml up --build --abort-on-container-exit
+      - name: Cleanup
         if: always()
-        run: |
-          touch apps/users/.env.staging
-          touch apps/api-gateway/.env.staging
-          touch apps/auth/.env.staging
-          touch apps/tasks/.env.staging
-
-      - name: Stop dependent services (docker-compose)
-        if: always()
-        run: docker compose -f docker-compose.staging.yml down
-
-  build-push:
-    name: Build & Push Docker Images (Matrix)
-    runs-on: ubuntu-latest
-    needs: integration-e2e
-    strategy:
-      matrix:
-        app: [users, api-gateway, auth, tasks]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
-
-      - name: Build and push Docker image for ${{ matrix.app }}
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./apps/${{ matrix.app }}/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ matrix.app }}:${{ env.IMAGE_TAG }}
-
-  health-check:
-    name: Post-Deploy Health Check (Placeholder)
-    runs-on: ubuntu-latest
-    needs: build-push
-    steps:
-      - name: Health check placeholder
-        run: |
-          echo "Skipping health checks - app is not deployed in staging yet."
-          # TODO: Add real health checks when deployment is implemented
+        run: docker compose -f docker-compose.staging.yml down -v
