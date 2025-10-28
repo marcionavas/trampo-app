@@ -59,6 +59,10 @@ jobs:
           cache: "npm"
       - run: npm ci
 
+      # Build containers
+      - name: Build containers
+        run: docker compose -f docker-compose.staging.yml build --pull
+
       # Gera os .env.test para cada microserviço
       - name: Create .env.test files
         run: |
@@ -84,7 +88,7 @@ jobs:
 
       # Executa testes de integração com Docker Compose
       - name: Run integration tests
-        run: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+        run: docker compose -f docker-compose.staging.yml up --build --abort-on-container-exit
       - name: Cleanup
         if: always()
-        run: docker compose -f docker-compose.test.yml down -v
+        run: docker compose -f docker-compose.staging.yml down -v
