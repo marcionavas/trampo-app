@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: trampo
       POSTGRES_PASSWORD: trampo123
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data_staging:/var/lib/postgresql/data
 
@@ -20,8 +20,8 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - '5672:5672'
+      - '15672:15672'
     volumes:
       - rabbitmq_data_staging:/var/lib/rabbitmq
 
@@ -36,7 +36,7 @@ services:
       - postgres
       - rabbitmq
     ports:
-      - "3000:3000"
+      - '3000:3000'
 
   auth:
     build:
@@ -49,7 +49,7 @@ services:
       - postgres
       - rabbitmq
     ports:
-      - "3001:3001"
+      - '3001:3001'
 
   tasks:
     build:
@@ -62,7 +62,7 @@ services:
       - postgres
       - rabbitmq
     ports:
-      - "3003:3003"
+      - '3003:3003'
 
   users:
     build:
@@ -75,7 +75,7 @@ services:
       - postgres
       - rabbitmq
     ports:
-      - "3002:3002"
+      - '3002:3002'
 
 volumes:
   postgres_data_staging:
