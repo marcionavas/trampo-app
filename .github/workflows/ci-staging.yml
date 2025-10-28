@@ -34,13 +34,6 @@ jobs:
         with:
           name: coverage
           path: coverage/
-      - name: Security audit (npm audit)
-        run: npm audit --audit-level=moderate > npm-audit.txt || true
-      - name: Upload npm audit report
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-audit-report
-          path: npm-audit.txt
 
   build:
     runs-on: ubuntu-latest
@@ -54,7 +47,7 @@ jobs:
       - run: npm ci
       - run: npx nx build
 
-  integration-e2e:
+  integration-test:
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 15
@@ -65,31 +58,33 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      # Create .env.staging files for each microservice
-      - name: Create .env.staging files
+
+      # Gera os .env.test para cada microserviço
+      - name: Create .env.test files
         run: |
-          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
-          echo "NODE_ENV=staging" >> apps/api-gateway/.env.staging
-          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
+          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.test
+          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.test
+          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.test
 
-          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
-          echo "NODE_ENV=staging" >> apps/auth/.env.staging
-          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
+          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.test
+          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.test
+          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.test
 
-          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
-          echo "NODE_ENV=staging" >> apps/users/.env.staging
-          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
+          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.test
+          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.test
+          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.test
 
-          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
-          echo "NODE_ENV=staging" >> apps/tasks/.env.staging
-          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
-      # Run integration/e2e tests with Docker Compose
-      - name: Run integration/e2e tests
-        run: docker compose -f docker-compose.staging.yml up --build --abort-on-container-exit
+          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.test
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.test
+          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.test
+          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.test
+
+      # Executa testes de integração com Docker Compose
+      - name: Run integration tests
+        run: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
       - name: Cleanup
         if: always()
-        run: docker compose -f docker-compose.staging.yml down -v
+        run: docker compose -f docker-compose.test.yml down -v
