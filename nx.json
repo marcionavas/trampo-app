@@ -2,15 +2,11 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "build": {
-      "outputs": [
-        "{projectRoot}/dist"
-      ],
+      "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
     "test:cov": {
-      "outputs": [
-        "{projectRoot}/coverage"
-      ],
+      "outputs": ["{projectRoot}/coverage"],
       "cache": true
     },
     "format": {
@@ -21,9 +17,7 @@
     },
     "test": {
       "cache": true,
-      "inputs": [
-        "default"
-      ]
+      "inputs": ["default"]
     },
     "test:watch": {
       "cache": true
@@ -33,9 +27,7 @@
     },
     "test:e2e": {
       "cache": true,
-      "inputs": [
-        "default"
-      ]
+      "inputs": ["default"]
     }
   },
   "defaultBase": "master",

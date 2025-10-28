@@ -3,12 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/apps/auth",
     "composite": true,
-    "types": [
-      "jest",
-      "node"
-    ]
+    "types": ["jest", "node"]
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

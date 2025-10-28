@@ -42,10 +42,10 @@ export default [
     rules: {
       'import/no-extraneous-dependencies': ['error', { packageDir: ['./'] }],
       'no-console': 'warn',
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single'],
-      'eqeqeq': 'error',
-      'curly': 'error',
+      semi: ['error', 'always'],
+      quotes: ['error', 'single'],
+      eqeqeq: 'error',
+      curly: 'error',
       // Regras do typescript-eslint
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'warn',
@@ -55,11 +55,7 @@ export default [
 
   // SUPRESSÃO DE ALERTAS NOS TESTES
   {
-    files: [
-      'test/**/*.ts',
-      '**/*.spec.ts',
-      '**/*.e2e-spec.ts'
-    ],
+    files: ['test/**/*.ts', '**/*.spec.ts', '**/*.e2e-spec.ts'],
     languageOptions: {
       parserOptions: {
         project: './apps/users/tsconfig.spec.json',
@@ -74,7 +70,7 @@ export default [
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-var-requires': 'off',
       // Adicione outras regras que deseja desabilitar nos testes
-    }
+    },
   },
 
   // Configuração para cada app (exemplo: users, auth, tasks, api-gateway)
@@ -92,10 +88,10 @@ export default [
     rules: {
       'import/no-extraneous-dependencies': ['error', { packageDir: ['./'] }],
       'no-console': 'warn',
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single'],
-      'eqeqeq': 'error',
-      'curly': 'error',
+      semi: ['error', 'always'],
+      quotes: ['error', 'single'],
+      eqeqeq: 'error',
+      curly: 'error',
       // Regras do typescript-eslint
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'warn',

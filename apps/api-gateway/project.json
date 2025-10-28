@@ -7,9 +7,7 @@
         "outputPath": "dist/apps/api-gateway",
         "main": "src/main.ts",
         "tsConfig": "tsconfig.app.json",
-        "assets": [
-          "src/assets"
-        ]
+        "assets": ["src/assets"]
       }
     },
     "serve": {

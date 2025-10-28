@@ -1,14 +1,6 @@
 {
-  "watch": [
-    "src",
-    "../../libs/common/src",
-    "../../libs/types/src"
-  ],
-  "ignore": [
-    "node_modules",
-    "dist",
-    "test"
-  ],
+  "watch": ["src", "../../libs/common/src", "../../libs/types/src"],
+  "ignore": ["node_modules", "dist", "test"],
   "ext": "ts,js,json",
   "exec": "ts-node -r tsconfig-paths/register src/main.ts",
   "legacyWatch": true
