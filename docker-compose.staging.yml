@@ -1,82 +1,96 @@
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres
-    restart: always
-    environment:
-      POSTGRES_DB: trampodb_staging
-      POSTGRES_USER: trampo
-      POSTGRES_PASSWORD: trampo123
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data_staging:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    restart: always
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    ports:
-      - '5672:5672'
-      - '15672:15672'
-    volumes:
-      - rabbitmq_data_staging:/var/lib/rabbitmq
-
   api-gateway:
     build:
       context: .
-      dockerfile: ./apps/api-gateway/Dockerfile
-    container_name: api-gateway
-    env_file:
-      - ./apps/api-gateway/.env.staging
-    depends_on:
-      - postgres
-      - rabbitmq
+      dockerfile: apps/api-gateway/Dockerfile
+      target: production
+    container_name: trampo-app-staging-api-gateway
     ports:
-      - '3000:3000'
+      - "3000:3000"
+    depends_on:
+      - auth
+      - users
+      - tasks
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/api-gateway/.env.staging
+    environment:
+      - NODE_ENV=staging
 
   auth:
     build:
       context: .
-      dockerfile: ./apps/auth/Dockerfile
-    container_name: auth
-    env_file:
-      - ./apps/auth/.env.staging
-    depends_on:
-      - postgres
-      - rabbitmq
+      dockerfile: apps/auth/Dockerfile
+      target: production
+    container_name: trampo-app-staging-auth
     ports:
-      - '3001:3001'
-
-  tasks:
-    build:
-      context: .
-      dockerfile: ./apps/tasks/Dockerfile
-    container_name: tasks
-    env_file:
-      - ./apps/tasks/.env.staging
+      - "3001:3001"
     depends_on:
-      - postgres
       - rabbitmq
-    ports:
-      - '3003:3003'
+      - postgres
+    env_file:
+      - apps/auth/.env.staging
+    environment:
+      - NODE_ENV=staging
 
   users:
     build:
       context: .
-      dockerfile: ./apps/users/Dockerfile
-    container_name: users
-    env_file:
-      - ./apps/users/.env.staging
-    depends_on:
-      - postgres
-      - rabbitmq
+      dockerfile: apps/users/Dockerfile
+      target: production
+    container_name: trampo-app-staging-users
     ports:
-      - '3002:3002'
+      - "3002:3002"
+    depends_on:
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/users/.env.staging
+    environment:
+      - NODE_ENV=staging
+
+  tasks:
+    build:
+      context: .
+      dockerfile: apps/tasks/Dockerfile
+      target: production
+    container_name: trampo-app-staging-tasks
+    ports:
+      - "3003:3003"
+    depends_on:
+      - rabbitmq
+      - postgres
+    env_file:
+      - apps/tasks/.env.staging
+    environment:
+      - NODE_ENV=staging
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: trampo-app-staging-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data_staging:/var/lib/rabbitmq
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: trampo-app-staging-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: trampo
+      POSTGRES_PASSWORD: trampo123
+      POSTGRES_DB: trampodb_staging
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
 
 volumes:
-  postgres_data_staging:
+  pgdata_staging:
   rabbitmq_data_staging:
