@@ -63,28 +63,28 @@ jobs:
       - name: Build containers
         run: docker compose -f docker-compose.staging.yml build --pull
 
-      # Gera os .env.test para cada microserviço
-      - name: Create .env.test files
+      # Gera os .env.staging para cada microserviço
+      - name: Create .env.staging files
         run: |
-          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.test
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.test
-          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.test
-          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.test
+          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.staging
+          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
 
-          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.test
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.test
-          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.test
-          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.test
+          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.staging
+          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
 
-          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.test
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.test
-          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.test
-          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.test
+          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.staging
+          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
 
-          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.test
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.test
-          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.test
-          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.test
+          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
+          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.staging
+          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
 
       # Executa testes de integração com Docker Compose
       - name: Run integration tests
