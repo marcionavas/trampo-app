@@ -131,6 +131,7 @@ jobs:
           path: coverage/junit-e2e-${{ matrix.app }}.xml
 
       - name: Ensure .env.staging exists
+        if: always()
         run: touch apps/${{ matrix.app }}/.env.staging
 
       - name: Derrubar serviços dependentes (docker-compose)
