@@ -10,6 +10,8 @@ name: CI Staging
 on:
   push:
     branches: [staging]
+  pull_request:
+    branches: [staging]
 
 env:
   REGISTRY: ghcr.io/${{ github.repository_owner }}
@@ -56,10 +58,16 @@ jobs:
           name: junit-results
           path: coverage/junit.xml
       - name: Security audit (npm audit)
-        run: npm audit --audit-level=moderate || true
-      - name: Summarize test results
+        run: npm audit --audit-level=moderate > npm-audit.txt || true
+
+      - name: Upload npm audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit.txt
+      - name: Summarize unit test results
         run: |
-          echo "==== Test Summary ===="
+          echo "==== Unit Test Summary ===="
           grep -E 'Tests:|Passed|Failed|Skipped' coverage/junit.xml || echo "See full JUnit XML for details."
 
   integration-e2e:
@@ -91,7 +99,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set secrets as env vars
+      - name: Set secrets as environment variables
         run: |
           if [ "${{ matrix.app }}" = "users" ]; then
             echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
@@ -115,7 +123,7 @@ jobs:
             echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
           fi
 
-      - name: Subir serviços dependentes (docker-compose)
+      - name: Start dependent services (docker-compose)
         run: docker compose -f docker-compose.staging.yml up -d
 
       - name: Build ${{ matrix.app }} app
@@ -130,11 +138,20 @@ jobs:
           name: junit-e2e-results-${{ matrix.app }}
           path: coverage/junit-e2e-${{ matrix.app }}.xml
 
-      - name: Ensure .env.staging exists
-        if: always()
-        run: touch apps/${{ matrix.app }}/.env.staging
+      - name: Summarize e2e test results
+        run: |
+          echo "==== E2E Test Summary ===="
+          grep -E 'Tests:|Passed|Failed|Skipped' coverage/junit-e2e-${{ matrix.app }}.xml || echo "See full JUnit XML for details."
 
-      - name: Derrubar serviços dependentes (docker-compose)
+      - name: Ensure all .env.staging files exist (cleanup)
+        if: always()
+        run: |
+          touch apps/users/.env.staging
+          touch apps/api-gateway/.env.staging
+          touch apps/auth/.env.staging
+          touch apps/tasks/.env.staging
+
+      - name: Stop dependent services (docker-compose)
         if: always()
         run: docker compose -f docker-compose.staging.yml down
 
@@ -170,4 +187,6 @@ jobs:
     needs: build-push
     steps:
       - name: Health check placeholder
-        run: echo "Skipping health checks - app is not deployed in staging yet."
+        run: |
+          echo "Skipping health checks - app is not deployed in staging yet."
+          # TODO: Add real health checks when deployment is implemented
