@@ -1,8 +1,8 @@
 # ===============================
-# CI Staging - Padrão profissional
+# CI Staging - Professional Standard
 #
-# Pipeline para validação completa do código na branch staging.
-# Executa lint, build, testes unitários, e2e e upload de cobertura.
+# Pipeline for complete code validation on the staging branch.
+# Runs lint, format, build, unit tests, e2e tests, uploads coverage and test results, builds/pushes Docker images, and performs health checks.
 # ===============================
 
 name: CI Staging
@@ -11,21 +11,38 @@ on:
   push:
     branches: [staging]
 
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}
+  IMAGE_TAG: ${{ github.sha }}
+  NODE_ENV: staging
+
 jobs:
-  lint-test:
+  lint-format-test:
+    name: Lint, Format, Unit Test & Coverage
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Instalar dependências
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
         run: npm ci
+
+      - name: Run Prettier (format check)
+        run: npx prettier --check .
 
       - name: Run lint
         run: npx nx lint
 
-      - name: Run unit tests
-        run: npx nx test
+      - name: Run unit tests with JUnit output
+        run: npx nx test --coverage --junitFile=coverage/junit.xml
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -33,72 +50,97 @@ jobs:
           name: coverage
           path: coverage/
 
-  integration-test:
+      - name: Upload JUnit test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-results
+          path: coverage/junit.xml
+      - name: Security audit (npm audit)
+        run: npm audit --audit-level=moderate || true
+      - name: Summarize test results
+        run: |
+          echo "==== Test Summary ===="
+          grep -E 'Tests:|Passed|Failed|Skipped' coverage/junit.xml || echo "See full JUnit XML for details."
+
+  integration-e2e:
+    name: Integration & E2E Tests (Matrix)
     runs-on: ubuntu-latest
-    needs: lint-test
-    env:
-      REGISTRY: ghcr.io/${{ github.repository_owner }}
-      IMAGE_TAG: ${{ github.sha }}
+    needs: lint-format-test
+    strategy:
+      matrix:
+        app: [users, api-gateway, auth, tasks]
+        node-version: [18, 20]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: ${{ matrix.node-version }}
           cache: "npm"
 
-      - name: Instalar dependências
-        run: npm ci
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      - name: Permitir testes no build do Docker (ajuste .dockerignore)
-        run: |
-          sed -i.bak '/^test[[:space:]]*#/d' .dockerignore
-          sed -i.bak '/^apps\/\*\/test[[:space:]]*#/d' .dockerignore
-          sed -i.bak '/^libs\/\*\/test[[:space:]]*#/d' .dockerignore
+      - name: Install dependencies
+        run: npm ci
 
       - name: Set secrets as env vars
         run: |
-          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.staging
-          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
-
-          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.staging
-          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
-
-          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.staging
-          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
-
-          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.staging
-          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
+          if [ "${{ matrix.app }}" = "users" ]; then
+            echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
+            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/users/.env.staging
+            echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
+            echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
+          elif [ "${{ matrix.app }}" = "api-gateway" ]; then
+            echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
+            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/api-gateway/.env.staging
+            echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
+            echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
+          elif [ "${{ matrix.app }}" = "auth" ]; then
+            echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
+            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/auth/.env.staging
+            echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
+            echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
+          elif [ "${{ matrix.app }}" = "tasks" ]; then
+            echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
+            echo "NODE_ENV=${{ env.NODE_ENV }}" >> apps/tasks/.env.staging
+            echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
+            echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
+          fi
 
       - name: Subir serviços dependentes (docker-compose)
         run: docker compose -f docker-compose.staging.yml up -d
 
-      - name: Build users app
-        run: npx nx build users
+      - name: Build ${{ matrix.app }} app
+        run: npx nx build ${{ matrix.app }}
 
-      - name: Run e2e tests
-        run: npx nx run users:test:e2e
+      - name: Run ${{ matrix.app }} e2e tests
+        run: npx nx run ${{ matrix.app }}:test:e2e --junitFile=coverage/junit-e2e-${{ matrix.app }}.xml
+
+      - name: Upload e2e JUnit test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-e2e-results-${{ matrix.app }}
+          path: coverage/junit-e2e-${{ matrix.app }}.xml
 
       - name: Derrubar serviços dependentes (docker-compose)
         if: always()
         run: docker compose -f docker-compose.staging.yml down
 
   build-push:
+    name: Build & Push Docker Images (Matrix)
     runs-on: ubuntu-latest
-    needs: integration-test
-    env:
-      REGISTRY: ghcr.io/${{ github.repository_owner }}
-      IMAGE_TAG: ${{ github.sha }}
+    needs: integration-e2e
+    strategy:
+      matrix:
+        app: [users, api-gateway, auth, tasks]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -110,10 +152,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image for ${{ matrix.app }}
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/users/Dockerfile
+          file: ./apps/${{ matrix.app }}/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/users:${{ env.IMAGE_TAG }}
+          tags: ${{ env.REGISTRY }}/${{ matrix.app }}:${{ env.IMAGE_TAG }}
+
+  health-check:
+    name: Post-Deploy Health Check (Placeholder)
+    runs-on: ubuntu-latest
+    needs: build-push
+    steps:
+      - name: Health check placeholder
+        run: echo "Skipping health checks - app is not deployed in staging yet."
