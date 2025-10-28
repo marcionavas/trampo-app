@@ -43,6 +43,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm ci
+
       - name: Permitir testes no build do Docker (ajuste .dockerignore)
         run: |
           sed -i.bak '/^test[[:space:]]*#/d' .dockerignore
@@ -73,6 +82,9 @@ jobs:
 
       - name: Subir serviços dependentes (docker-compose)
         run: docker compose -f docker-compose.staging.yml up -d
+
+      - name: Build users app
+        run: npx nx build users
 
       - name: Run e2e tests
         run: npx nx run users:test:e2e
