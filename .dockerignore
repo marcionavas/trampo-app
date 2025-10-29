@@ -6,7 +6,8 @@
 #   - Comente as linhas abaixo para permitir testes no container.
 ###########################################
 node_modules
-dist
+# Ignore build output
+# dist/ REMOVIDO para permitir build dos containers de staging
 coverage
 .env
 .env.*
