@@ -45,19 +45,10 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      - run: npx nx run-many --target=build --all
-      - name: Verificar artefatos de build
-        run: |
-          echo "Conteúdo de dist/apps:"
-          ls -l dist/apps
-          echo "Conteúdo de dist/apps/api-gateway:"
-          ls -l dist/apps/api-gateway
-          echo "Conteúdo de dist/apps/auth:"
-          ls -l dist/apps/auth
-          echo "Conteúdo de dist/apps/users:"
-          ls -l dist/apps/users
-          echo "Conteúdo de dist/apps/tasks:"
-          ls -l dist/apps/tasks
+      - run: npx nx build api-gateway
+      - run: npx nx build auth
+      - run: npx nx build users
+      - run: npx nx build tasks
 
   integration-test:
     runs-on: ubuntu-latest
@@ -65,42 +56,38 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
       - run: npm ci
+
+      # Gera os .env.staging para cada microserviço (valores fixos, ajuste conforme necessário)
+      - name: Create .env.staging files
+        run: |
+          echo "PORT=3000" > apps/api-gateway/.env.staging
+          echo "NODE_ENV=staging" >> apps/api-gateway/.env.staging
+          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
+
+          echo "PORT=3001" > apps/auth/.env.staging
+          echo "NODE_ENV=staging" >> apps/auth/.env.staging
+          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
+
+          echo "PORT=3002" > apps/users/.env.staging
+          echo "NODE_ENV=staging" >> apps/users/.env.staging
+          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
+
+          echo "PORT=3003" > apps/tasks/.env.staging
+          echo "NODE_ENV=staging" >> apps/tasks/.env.staging
+          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
+          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
 
       # Build containers
       - name: Build containers
         run: docker compose -f docker-compose.staging.yml build --pull
 
-      # Gera os .env.staging para cada microserviço
-      - name: Create .env.staging files
-        run: |
-          echo "PORT=${{ vars.API_GATEWAY_PORT }}" > apps/api-gateway/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/api-gateway/.env.staging
-          echo "DATABASE_URL=${{ secrets.API_GATEWAY_DATABASE_URL_STAGING }}" >> apps/api-gateway/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.API_GATEWAY_RABBITMQ_URL_STAGING }}" >> apps/api-gateway/.env.staging
-
-          echo "PORT=${{ vars.AUTH_PORT }}" > apps/auth/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/auth/.env.staging
-          echo "DATABASE_URL=${{ secrets.AUTH_DATABASE_URL_STAGING }}" >> apps/auth/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.AUTH_RABBITMQ_URL_STAGING }}" >> apps/auth/.env.staging
-
-          echo "PORT=${{ vars.USERS_PORT }}" > apps/users/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/users/.env.staging
-          echo "DATABASE_URL=${{ secrets.USERS_DATABASE_URL_STAGING }}" >> apps/users/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.USERS_RABBITMQ_URL_STAGING }}" >> apps/users/.env.staging
-
-          echo "PORT=${{ vars.TASKS_PORT }}" > apps/tasks/.env.staging
-          echo "NODE_ENV=${{ vars.NODE_ENV }}" >> apps/tasks/.env.staging
-          echo "DATABASE_URL=${{ secrets.TASKS_DATABASE_URL_STAGING }}" >> apps/tasks/.env.staging
-          echo "RABBITMQ_URL=${{ secrets.TASKS_RABBITMQ_URL_STAGING }}" >> apps/tasks/.env.staging
-
       # Executa testes de integração com Docker Compose
       - name: Run integration tests
-        run: docker compose -f docker-compose.staging.yml up --build --abort-on-container-exit
+        run: docker compose -f docker-compose.staging.yml up --abort-on-container-exit
       - name: Cleanup
         if: always()
         run: docker compose -f docker-compose.staging.yml down -v
