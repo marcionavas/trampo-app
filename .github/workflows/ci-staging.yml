@@ -46,6 +46,18 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npx nx run-many --target=build --all
+      - name: Verificar artefatos de build
+        run: |
+          echo "Conteúdo de dist/apps:"
+          ls -l dist/apps
+          echo "Conteúdo de dist/apps/api-gateway:"
+          ls -l dist/apps/api-gateway
+          echo "Conteúdo de dist/apps/auth:"
+          ls -l dist/apps/auth
+          echo "Conteúdo de dist/apps/users:"
+          ls -l dist/apps/users
+          echo "Conteúdo de dist/apps/tasks:"
+          ls -l dist/apps/tasks
 
   integration-test:
     runs-on: ubuntu-latest
