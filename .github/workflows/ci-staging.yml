@@ -35,24 +35,9 @@ jobs:
           name: coverage
           path: coverage/
 
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-      - run: npm ci
-      - run: npx nx build api-gateway
-      - run: npx nx build auth
-      - run: npx nx build users
-      - run: npx nx build tasks
-
   integration-test:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
